@@ -16,10 +16,14 @@ echo "clickhouse-connect>=0.6.8" >> ./docker/requirements-local.txt
 wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Superset-Clickhouse/superset-clickhouse-docker-compose.yml 
 
 # Build the docker image
-docker compose build --force-rm -f superset-clickhouse-docker-compose.yml
+docker compose build --force-rm
 
-# Create predefined network for superset-clickhouse, if not existed
-docker network create superset-clickhouse
+# Create predefined network for superset-clickhouse, if not existed yet
+try 
+(
+  docker network inspect superset-clickhouse >/dev/null 2>&1 
+)
+catch || ( echo "Network superset-clickhouse already existed")
 
 # Run the docker image
-docker compose up -d -f superset-clickhouse-docker-compose.yml
+docker compose -f superset-clickhouse-docker-compose.yml up -d

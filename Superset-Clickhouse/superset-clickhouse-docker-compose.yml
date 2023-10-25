@@ -71,6 +71,7 @@ services:
       - ./docker/clickhouse/keys.xml:/etc/clickhouse-server/keys.xml
       - ./docker/clickhouse/ssl:/etc/clickhouse-server/ssl
       - ./docker/clickhouse/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+
     healthcheck:
       test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
       interval: 1m30s
@@ -193,6 +194,8 @@ volumes:
     external: false
   redis:
     external: false
+  clickhouse:
+    external: true
   
 
 networks:

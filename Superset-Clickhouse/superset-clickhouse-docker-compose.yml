@@ -59,6 +59,7 @@ services:
     volumes:
       - db_home:/var/lib/postgresql/data
       - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    platform: linux/arm64
     
   clickhouse:
     env_file: docker/.env

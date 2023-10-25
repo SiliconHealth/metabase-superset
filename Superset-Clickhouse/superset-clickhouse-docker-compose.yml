@@ -195,7 +195,7 @@ volumes:
   redis:
     external: false
   clickhouse:
-    external: true
+    external: false
   
 
 networks:

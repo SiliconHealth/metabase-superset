@@ -19,11 +19,7 @@ wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Supe
 docker compose build --force-rm
 
 # Create predefined network for superset-clickhouse, if not existed yet
-try 
-(
-  docker network inspect superset-clickhouse >/dev/null 2>&1 
-)
-catch || ( echo "Network superset-clickhouse already existed")
+docker network inspect superset-clickhouse >/dev/null 2>&1 || ( echo "Network superset-clickhouse already existed")
 
 # Run the docker image
 docker compose -f superset-clickhouse-docker-compose.yml up -d

@@ -201,3 +201,4 @@ volumes:
 networks:
   default:
     name: superset-clickhouse
+    external: true

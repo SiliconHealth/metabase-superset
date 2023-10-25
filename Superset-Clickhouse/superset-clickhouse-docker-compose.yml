@@ -145,6 +145,7 @@ services:
     env_file: docker/.env
     depends_on: *superset-depends-on
     volumes: *superset-volumes
+    platform: linux/arm64/v8
 
   superset-worker:
     image: *superset-image

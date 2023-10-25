@@ -71,13 +71,13 @@ services:
       - ./docker/clickhouse/keys.xml:/etc/clickhouse-server/keys.xml
       - ./docker/clickhouse/ssl:/etc/clickhouse-server/ssl
       - ./docker/clickhouse/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-
     healthcheck:
       test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
       interval: 1m30s
       timeout: 30s
       retries: 5
       start_period: 30s
+    platform: linux/arm64
 
   superset:
     env_file: docker/.env

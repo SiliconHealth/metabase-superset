@@ -37,7 +37,6 @@ services:
       - "80:80"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    platform: linux/arm64/v8
 
   redis:
     image: redis:7
@@ -47,10 +46,9 @@ services:
       - "127.0.0.1:6379:6379"
     volumes:
       - redis:/data
-    platform: linux/arm64
 
   db:
-    env_file: docker/.env
+    env_file: .env
     image: postgres:15
     container_name: superset_db
     restart: unless-stopped
@@ -62,7 +60,7 @@ services:
     platform: linux/arm64
     
   clickhouse:
-    env_file: docker/.env
+    env_file: .env
     image: clickhouse/clickhouse-server:latest
     container_name: superset_clickhouse
     restart: unless-stopped
@@ -70,21 +68,16 @@ services:
       - "9000:9000"
     volumes:
       - clickhouse:/var/lib/clickhouse
-      - ./docker/clickhouse/config.xml:/etc/clickhouse-server/config.xml
-      - ./docker/clickhouse/users.xml:/etc/clickhouse-server/users.xml
-      - ./docker/clickhouse/keys.xml:/etc/clickhouse-server/keys.xml
-      - ./docker/clickhouse/ssl:/etc/clickhouse-server/ssl
-      - ./docker/clickhouse/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ./clickhouse/config.xml:/etc/clickhouse-server/config.xml
     healthcheck:
       test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
       interval: 1m30s
       timeout: 30s
       retries: 5
       start_period: 30s
-    platform: linux/arm64
 
   superset:
-    env_file: docker/.env
+    env_file: .env
     image: *superset-image
     container_name: superset_app
     command: ["/app/docker/docker-bootstrap.sh", "app"]
@@ -96,6 +89,7 @@ services:
     volumes: *superset-volumes
     environment:
       CYPRESS_CONFIG: "${CYPRESS_CONFIG}"
+    platform: linux/x86_64
 
   superset-websocket:
     container_name: superset_websocket
@@ -129,7 +123,7 @@ services:
     image: *superset-image
     container_name: superset_init
     command: ["/app/docker/docker-init.sh"]
-    env_file: docker/.env
+    env_file: .env
     depends_on: *superset-depends-on
     user: *superset-user
     volumes: *superset-volumes
@@ -142,16 +136,15 @@ services:
     image: node:16
     container_name: superset_node
     command: ["/app/docker/docker-frontend.sh"]
-    env_file: docker/.env
+    env_file: .env
     depends_on: *superset-depends-on
     volumes: *superset-volumes
-    platform: linux/arm64/v8
 
   superset-worker:
     image: *superset-image
     container_name: superset_worker
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
-    env_file: docker/.env
+    env_file: .env
     restart: unless-stopped
     depends_on: *superset-depends-on
     user: *superset-user
@@ -166,7 +159,7 @@ services:
     image: *superset-image
     container_name: superset_worker_beat
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
-    env_file: docker/.env
+    env_file: .env
     restart: unless-stopped
     depends_on: *superset-depends-on
     user: *superset-user
@@ -178,7 +171,7 @@ services:
     image: *superset-image
     container_name: superset_tests_worker
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
-    env_file: docker/.env
+    env_file: .env
     environment:
       DATABASE_HOST: localhost
       DATABASE_DB: test

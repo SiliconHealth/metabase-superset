@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Declare default platform for docker build for M1/M2 Mac
+export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
+
+# check if there is .env file
+if [ ! -f .env ]; then
+    wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Superset-Clickhouse/.env.example  -O ./.env.example
+    echo "No .env file found, creating one from .env.example"
+    cp .env.example .env
+fi
+
 #  Download Superset initial docker definition and source code
 git clone https://github.com/apache/superset.git
 

@@ -13,7 +13,7 @@ touch ./docker/requirements-local.txt
 echo "clickhouse-connect>=0.6.8" >> ./docker/requirements-local.txt
 
 # Get predefined compose file with clickhouse definition
-wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Superset-Clickhouse/superset-clickhouse-docker-compose.yml 
+wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Superset-Clickhouse/superset-clickhouse-docker-compose.yml  -O ./superset-clickhouse-docker-compose.yml
 
 # Build the docker image
 docker compose build --force-rm

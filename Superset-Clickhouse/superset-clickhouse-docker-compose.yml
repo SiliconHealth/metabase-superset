@@ -68,7 +68,6 @@ services:
     volumes:
       - clickhouse:/var/lib/clickhouse
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.xml
-      - ./clickhouse/users.xml:/etc/clickhouse-server/users.xml
     healthcheck:
       test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
       interval: 1m30s

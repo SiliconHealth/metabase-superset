@@ -3,6 +3,7 @@
 if [ "$(uname)" == "Darwin" ]; then
     # Do something under Mac OS X platform
     export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
+    CLICKHOUSE_PLATFORM=$DOCKER_DEFAULT_PLATFORM
     # Declare default platform for docker build for M1/M2 Mac
     CPU_BRAND=$(sysctl -n machdep.cpu.brand_string)
     if [[ $CPU_BRAND == *"M1"* || $CPU_BRAND == *"M2"* ]]; then

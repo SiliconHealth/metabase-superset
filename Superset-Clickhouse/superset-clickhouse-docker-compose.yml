@@ -62,7 +62,6 @@ services:
     env_file: .env
     image: clickhouse/clickhouse-server:latest
     container_name: superset_clickhouse
-    restart: unless-stopped
     ports:
       - "9000:9000"
     volumes:

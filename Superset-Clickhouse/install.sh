@@ -2,6 +2,7 @@
 
 if [ "$(uname)" == "Darwin" ]; then
     # Do something under Mac OS X platform
+    brew install yq
     export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
     CLICKHOUSE_PLATFORM=$DOCKER_DEFAULT_PLATFORM
     # Declare default platform for docker build for M1/M2 Mac
@@ -16,6 +17,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     # Do something under GNU/Linux platform
     export DOCKER_DEFAULT_PLATFORM=linux/amd64
     CLICKHOUSE_PLATFORM=$DOCKER_DEFAULT_PLATFORM
+    yes | sudo apt install yq
 
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     # Do something under 64 bits Windows NT platform

@@ -2,24 +2,24 @@
 
 if [ "$(uname)" == "Darwin" ]; then
     # Do something under Mac OS X platform
-    export DOCKER_DEFAULT_PLATFORM=linux/arm64
+    export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
     # Declare default platform for docker build for M1/M2 Mac
     CPU_BRAND=$(sysctl -n machdep.cpu.brand_string)
     if [[ $CPU_BRAND == *"M1"* || $CPU_BRAND == *"M2"* ]]; then
-      echo "M1/M2 Mac detected, using linux/arm64/v8 as default platform"
-      export DOCKER_DEFAULT_PLATFORM=linux/amd64
-      SUPERSET_PLATFORM=linux/x86_64
+      echo "M1/M2 Mac detected, using linux/amd64 as default platform"
+      export DOCKER_DEFAULT_PLATFORM=linux/x86_64
+      CLICKHOUSE_PLATFORM=linux/arm64
     fi
 
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     # Do something under GNU/Linux platform
     export DOCKER_DEFAULT_PLATFORM=linux/amd64
-    SUPERSET_PLATFORM=$DOCKER_DEFAULT_PLATFORM
+    CLICKHOUSE_PLATFORM=$DOCKER_DEFAULT_PLATFORM
 
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     # Do something under 64 bits Windows NT platform
     export DOCKER_DEFAULT_PLATFORM=windows-amd64
-    SUPERSET_PLATFORM=$DOCKER_DEFAULT_PLATFORM
+    CLICKHOUSE_PLATFORM=$DOCKER_DEFAULT_PLATFORM
 fi
 
 #  Download Superset initial docker definition and source code
@@ -54,13 +54,13 @@ wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Supe
 compose_file="./superset-clickhouse-docker-compose.yml"
 
 ## Define the service name to search for
-service_name="superset"
+service_name="clickhouse"
 
 if [[ $CPU_BRAND == *"M1"* || $CPU_BRAND == *"M2"* ]]; then
   # Check if the service definition exists in the YAML file
   if yq eval ".services.$service_name" "$compose_file" > /dev/null 2>&1; then
       # Add the "platform" property to the service definition
-      yq eval ".services.$service_name.platform = $(SUPERSET_PLATFORM)" -i "$compose_file"
+      yq eval ".services.$service_name.platform = $(CLICKHOUSE_PLATFORM)" -i "$compose_file"
       echo "Added 'platform' property to the '$service_name' service."
   else
       echo "Service '$service_name' not found in the Docker Compose file."
@@ -76,3 +76,14 @@ docker network inspect superset-clickhouse >/dev/null 2>&1 || ( echo "Network su
 
 # Run the docker image
 docker compose -f superset-clickhouse-docker-compose.yml up -d
+
+# Run the initialization process
+# docker exec -it superset superset fab create-admin \
+#               --username admin \
+#               --firstname Superset \
+#               --lastname Admin \
+#               --email admin@superset.com \
+#               --password admin
+
+# docker exec -it superset superset db upgrade
+# docker exec -it superset superset init

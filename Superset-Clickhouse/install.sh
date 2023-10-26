@@ -6,10 +6,10 @@ if [ "$(uname)" == "Darwin" ]; then
     # Declare default platform for docker build for M1/M2 Mac
     CPU_BRAND=$(sysctl -n machdep.cpu.brand_string)
     if [[ $CPU_BRAND == *"M1"* || $CPU_BRAND == *"M2"* ]]; then
-      export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
+      echo "M1/M2 Mac detected, using linux/arm64/v8 as default platform"
+      export DOCKER_DEFAULT_PLATFORM=linux/amd64
       SUPERSET_PLATFORM=linux/x86_64
     fi
-    SUPERSET_PLATFORM=$DOCKER_DEFAULT_PLATFORM
 
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     # Do something under GNU/Linux platform
@@ -22,18 +22,18 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     SUPERSET_PLATFORM=$DOCKER_DEFAULT_PLATFORM
 fi
 
-# Declare default platform for docker build for M1/M2 Mac
-export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
+#  Download Superset initial docker definition and source code
+git clone https://github.com/apache/superset.git
 
 # check if there is .env file
 if [ ! -f .env ]; then
     wget https://raw.githubusercontent.com/SiliconHealth/metabase-superset/main/Superset-Clickhouse/.env.example  -O ./.env.example
     echo "No .env file found, creating one from .env.example"
-    cp .env.example .env
+    cp .env.example ./superset/.env
+elif [ -f .env ]; then
+    echo "Found .env file, using it"
+    cp .env ./superset/.env
 fi
-
-#  Download Superset initial docker definition and source code
-git clone https://github.com/apache/superset.git
 
 # Get into superset folder
 cd superset

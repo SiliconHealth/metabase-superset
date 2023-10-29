@@ -29,7 +29,7 @@ Both *metabase* and *superset* are equipped with username/password authenticatio
 For example, in supserset the admin user is created by following set of commands.
 
 ```
-docker exec -it SUIPERSET_CONTATINERNAME superset fab create-admin \
+docker exec -it SUPERSET_CONTAINERNAME superset fab create-admin \
               --username USERNAME \
               --firstname ADMIN_FIRSTNAME \
               --lastname ADMIN_LASTNAME \
@@ -37,8 +37,8 @@ docker exec -it SUIPERSET_CONTATINERNAME superset fab create-admin \
               --password ADMIN_PASSOWRD
 ```
 ```
-docker exec -it SUIPERSET_CONTATINERNAME superset db upgrade
-docker exec -it SUIPERSET_CONTATINERNAME superset init
+docker exec -it SUPERSET_CONTAINERNAME superset db upgrade
+docker exec -it SUPERSET_CONTAINERNAME superset init
 ```
 The first command is to generate the transaction to database to create an admin user. The second command set is for database migration (commit the transaction).
 

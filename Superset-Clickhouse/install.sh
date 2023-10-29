@@ -74,6 +74,9 @@ docker volume inspect clickhouse_server >/dev/null 2>&1 || docker volume create 
 # docker compose -f superset-clickhouse-docker-compose.yml up -d
 docker-compose -f docker-compose.yml up -d
 
+docker exec -it superset_app superset db upgrade
+docker exec -it superset_app superset init
+
 echo "Waiting for Superset to start..."
 
 read -p 'Do you want to create admin user? (y/n): ' adminvar
@@ -101,8 +104,5 @@ docker exec -it superset_app superset fab create-admin \
               --lastname Admin \
               --email admin@superset.com \
               --password $passvar
-
-docker exec -it superset_app superset db upgrade
-docker exec -it superset_app superset init
 
 echo "Superset is ready to use"

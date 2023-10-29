@@ -25,56 +25,23 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     DB_PLATFORM=$DOCKER_DEFAULT_PLATFORM
 fi
 
-#  Download Superset initial docker definition and source code
-git clone https://github.com/apache/superset.git
-
 # check if there is .env file
 if [ ! -f .env ]; then
-    wget --no-check-certificate --no-cache --no-cookies https://raw.githubusercontent.com/SiliconHealth/metabase-superset/clickhouse-compose/Superset-Clickhouse/.env.example  -O ./.env.example
+    wget --no-cache --no-cookies https://raw.githubusercontent.com/SiliconHealth/metabase-superset/clickhouse-compose/Superset-Clickhouse/.env.example  -O ./.env.example
     echo "No .env file found, creating one from .env.example"
-    cp .env.example ./superset/.env
+    cp .env.example ./.env
 elif [ -f .env ]; then
     echo "Found .env file, using it"
-    cp .env ./superset/.env
+    cp .env ./.env
 fi
 
-# Get into superset folder
-cd superset
-
-# Create a a local requirement file
-touch ./docker/requirements-local.txt
-
-# Add clickhouse driver to the local requirement file
-echo "clickhouse-connect>=0.6.8" >> ./docker/requirements-local.txt
-
-# Get predefined compose file with clickhouse definition
-wget --no-check-certificate --no-cache --no-cookies https://raw.githubusercontent.com/SiliconHealth/metabase-superset/clickhouse-compose/Superset-Clickhouse/superset-clickhouse-docker-compose.yml  -O ./superset-clickhouse-docker-compose.yml
-
-
-# Replace platform with specify platform
-
-## Name of the Docker Compose file
-compose_file="./superset-clickhouse-docker-compose.yml"
+compose_file="./docker-compose.yml"
 
 ## Define the database service name to search for
 clickhouse_service_name="clickhouse"
-db_service_name="db"
-redis_service_name="redis"
 
-## Define node service name
-node_service="superset-node"
 
 if [[ $CPU_BRAND == *"M1"* || $CPU_BRAND == *"M2"* ]]; then
-
-  # Node 16
-  # Check if the service definition exists in the YAML file
-  if yq eval ".services.$node_service" "$compose_file" > /dev/null 2>&1; then
-      # Add the "platform" property to the service definition
-      yq eval ".services.$node_service.platform = \"linux/arm64/v8\"" -i "$compose_file"
-      echo "Added 'platform' property to the '$node_service' service."
-  else
-      echo "Service '$node_service' not found in the Docker Compose file."
-  fi
 
   # clickhouse
   # Check if the service definition exists in the YAML file
@@ -86,55 +53,56 @@ if [[ $CPU_BRAND == *"M1"* || $CPU_BRAND == *"M2"* ]]; then
       echo "Service '$clickhouse_service_name' not found in the Docker Compose file."
   fi
 
-  # redis
-  # Check if the service definition exists in the YAML file
-  if yq eval ".services.$redis_service_name" "$compose_file" > /dev/null 2>&1; then
-      # Add the "platform" property to the service definition
-      yq eval ".services.$redis_service_name.platform = \"$DB_PLATFORM\"" -i "$compose_file"
-      echo "Added 'platform' property to the '$redis_service_name' service."
-  else
-      echo "Service '$redis_service_name' not found in the Docker Compose file."
-  fi
-
-  # db
-  # Check if the service definition exists in the YAML file
-  if yq eval ".services.$db_service_name" "$compose_file" > /dev/null 2>&1; then
-      # Add the "platform" property to the service definition
-      yq eval ".services.$db_service_name.platform = \"$DB_PLATFORM\"" -i "$compose_file"
-      echo "Added 'platform' property to the '$db_service_name' service."
-  else
-      echo "Service '$db_service_name' not found in the Docker Compose file."
-  fi
-
-  # nginx
-  # Check if the service definition exists in the YAML file
-  if yq eval ".services.nginx" "$compose_file" > /dev/null 2>&1; then
-      # Add the "platform" property to the service definition
-      yq eval ".services.nginx.platform = \"linux/arm64/v8\"" -i "$compose_file"
-      echo "Added 'platform' property to the 'nginx' service."
-  else
-      echo "Service 'nginx' not found in the Docker Compose file."
-  fi
-
 fi
 
 
 # Build the docker image
-docker compose build --force-rm
+docker compose -f docker-compose.yml build --force-rm
 
 # Create predefined network for superset-clickhouse, if not existed yet
 docker network inspect superset-clickhouse >/dev/null 2>&1 || ( echo "Network superset-clickhouse already existed")
 
+# Create predefined volumes for composeed containers
+# 1. `superset` for superset app
+# 2. `clickhouse` for clickhouse data
+# 3. `clickhouse_server` for clickhouse-server 
+docker volume inspect superset >/dev/null 2>&1 || docker volume create superset
+docker volume inspect clickhouse >/dev/null 2>&1 || docker volume create clickhouse
+docker volume inspect clickhouse_server >/dev/null 2>&1 || docker volume create clickhouse_server
+
 # Run the docker image
-docker compose -f superset-clickhouse-docker-compose.yml up -d
+# docker compose -f superset-clickhouse-docker-compose.yml up -d
+docker-compose -f docker-compose.yml up -d
+
+echo "Waiting for Superset to start..."
+
+read -p 'Do you want to create admin user? (y/n): ' adminvar
+
+if [ $adminvar != "y" ]; then
+    echo "No admin user created"
+    echo "Superset is ready to use if you have created admin user before"
+    echo "If not, please run 'docker exec -it superset_app superset fab create-admin' to create admin user"
+    exit 1
+fi
+
+read -p 'Admin username: ' uservar
+read -sp 'Admin password: ' passvar
+read -sp 'Confirm Password: ' passvarConfirm
+
+if [ $passvar != $passvarConfirm ]; then
+    echo "Passwords do not match"
+    exit 1
+fi
 
 # # Run the initialization process
-# docker exec -it superset_app superset fab create-admin \
-#               --username admin \
-#               --firstname Superset \
-#               --lastname Admin \
-#               --email admin@superset.com \
-#               --password admin
+docker exec -it superset_app superset fab create-admin \
+              --username $uservar \
+              --firstname Superset \
+              --lastname Admin \
+              --email admin@superset.com \
+              --password $passvar
 
 docker exec -it superset_app superset db upgrade
 docker exec -it superset_app superset init
+
+echo "Superset is ready to use"

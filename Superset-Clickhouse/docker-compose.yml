@@ -1,0 +1,46 @@
+version: '3.7'
+services:
+  superset:
+    env_file: .env
+    build: ./superset
+    container_name: superset_app
+    user: root
+    depends_on:
+      - clickhouse
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset:/app/superset
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+  clickhouse:
+    env_file: .env
+    image: clickhouse/clickhouse-server:latest
+    container_name: superset_clickhouse
+    ports:
+      - "9000:9000"
+    volumes:
+      - clickhouse:/var/lib/clickhouse
+      - clickhouse_server:/etc/clickhouse-server
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    platform: linux/arm64
+networks:
+  default:
+    name: superset-clickhouse
+    external: true
+volumes:
+  clickhouse:
+    external: true
+  clickhouse_server:
+    external: true
+  superset:
+    external: true

@@ -106,3 +106,5 @@ docker exec -it superset_app superset fab create-admin \
               --password $passvar
 
 echo "Superset is ready to use"
+
+echo "To connect with clickhouse please use connect to port 8123 with the hostname of superset_clickhouse, the database connected is 'default' without new db creation"
